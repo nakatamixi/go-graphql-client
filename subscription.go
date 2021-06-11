@@ -276,17 +276,22 @@ func (sc *SubscriptionClient) sendConnectionInit() (err error) {
 // The handler callback function will receive raw message data or error. If the call return error, onError event will be triggered
 // The function returns subscription ID and error. You can use subscription ID to unsubscribe the subscription
 func (sc *SubscriptionClient) Subscribe(v interface{}, variables map[string]interface{}, handler func(message *json.RawMessage, err error) error) (string, error) {
-	return sc.do(v, variables, handler, "")
+	query := constructSubscription(v, variables, "")
+	return sc.do(query, variables, handler)
 }
 
 // NamedSubscribe sends start message to server and open a channel to receive data, with operation name
 func (sc *SubscriptionClient) NamedSubscribe(name string, v interface{}, variables map[string]interface{}, handler func(message *json.RawMessage, err error) error) (string, error) {
-	return sc.do(v, variables, handler, name)
+	query := constructSubscription(v, variables, name)
+	return sc.do(query, variables, handler)
 }
 
-func (sc *SubscriptionClient) do(v interface{}, variables map[string]interface{}, handler func(message *json.RawMessage, err error) error, name string) (string, error) {
+// RawSubscribe sends start message to server and open a channel to receive data, with raw subscription string.
+func (sc *SubscriptionClient) RawSubscribe(v string, variables map[string]interface{}, handler func(message *json.RawMessage, err error) error) (string, error) {
+	return sc.do(v, variables, handler)
+}
+func (sc *SubscriptionClient) do(query string, variables map[string]interface{}, handler func(message *json.RawMessage, err error) error) (string, error) {
 	id := uuid.New().String()
-	query := constructSubscription(v, variables, name)
 
 	sub := subscription{
 		query:     query,
